@@ -55,19 +55,25 @@ def run_server():
             request_data = b""
             while True:
                 try:
-                    chunk = client_socket.recv(16384)
+                    chunk = client_socket.recv(65536)
                     if not chunk:
                         break
                     request_data += chunk
                     if b'\r\n\r\n' in request_data:
+                        header_part = request_data.split(b'\r\n\r\n')[0]
+                        cl_val = 0
                         if b'Content-Length:' in request_data:
-                            header_part = request_data.split(b'\r\n\r\n')[0]
-                            cl_line = [l for l in header_part.decode('utf-8', errors='ignore').split('\r\n') if l.lower().startswith('content-length:')]
-                            if cl_line:
-                                cl_val = int(cl_line[0].split(':')[1].strip())
-                                if len(request_data) >= len(header_part) + 4 + cl_val:
-                                    break
-                        else:
+                            for l in header_part.decode('utf-8', errors='ignore').split('\r\n'):
+                                if l.lower().startswith('content-length:'):
+                                    try:
+                                        cl_val = int(l.split(':')[1].strip())
+                                    except:
+                                        pass
+                        body_received_len = len(request_data) - (len(header_part) + 4)
+                        if body_received_len >= cl_val:
+                            break
+                    else:
+                        if len(request_data) > 65536:
                             break
                 except socket.timeout:
                     break
@@ -319,8 +325,8 @@ def generate_chat_html():
             .msg-menu-container { position: absolute; right: 6px; top: 6px; z-index: 10; display: inline-block; }
             .dots-btn { background: none; border: none; color: #b1cbd0; cursor: pointer; font-size: 15px; padding: 0 4px; font-weight: bold; }
             .dots-btn:hover { color: #fff; }
-            .dropdown-menu { display: none; position: absolute; right: 0; top: 22px; background: #233138; border: 1px solid #2f3b43; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.6); z-index: 20; width: 95px; }
-            .dropdown-menu button { background: none; border: none; color: #e9edef; width: 100%; text-align: left; padding: 7px 10px; font-size: 12px; cursor: pointer; }
+            .dropdown-menu { display: none; position: absolute; right: 0; top: 22px; background: #233138; border: 1px solid #2f3b43; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.6); z-index: 20; width: 50px; text-align: center; }
+            .dropdown-menu button { background: none; border: none; color: #e9edef; width: 100%; padding: 6px 0; font-size: 14px; cursor: pointer; }
             .dropdown-menu button:hover { background: #182229; color: #00a884; }
 
             img.chat-media, video.chat-media { max-width: 220px; max-height: 180px; border-radius: 6px; margin-top: 4px; display: block; object-fit: cover; }
@@ -364,7 +370,7 @@ def generate_chat_html():
             <div class="chat-header">
                 <h2>Netknock Pro</h2>
                 <div style="display: flex; gap: 8px; align-items: center;">
-                    <button class="admin-btn" onclick="openAdminModal()"> Owner PIN</button>
+                    <button class="admin-btn" onclick="openAdminModal()">🔑 Owner PIN</button>
                     <div id="greeting" style="display:none; font-size: 12px; color: #8696a0;">
                         <span id="current-user" style="color: #00a884; font-weight: bold;"></span> 
                         (<a href="#" onclick="logout()">Switch</a>)
@@ -385,8 +391,8 @@ def generate_chat_html():
             <div class="mode-selector" id="mode-bar" style="display:none;">
                 <span style="color:#8696a0;">Mode:</span>
                 <select id="chat-mode" onchange="toggleMode()">
-                    <option value="Everyone"> Public Group</option>
-                    <option value="DM"> Direct Message</option>
+                    <option value="Everyone">🌍 Public Group</option>
+                    <option value="DM">🔒 Direct Message</option>
                 </select>
             </div>
 
@@ -403,10 +409,10 @@ def generate_chat_html():
             <form class="chat-footer" id="chat-form" onsubmit="sendMessage(event)" style="display:none;">
                 <div class="input-row">
                     <label class="action-btn" title="Attach Any File (Max 200MB)">
-                        File<input type="file" id="media-file" accept="*" onchange="previewFile()">
+                        📁<input type="file" id="media-file" accept="*" onchange="previewFile()">
                     </label>
                     <button type="button" class="action-btn" id="mic-btn" title="Click to Record/Stop Voice Note" onclick="toggleVoiceRecording()">
-                        Rec
+                        🎤
                     </button>
                     <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off">
                     <button type="submit" class="send-btn">Send</button>
@@ -548,7 +554,6 @@ def generate_chat_html():
                 }
             }
 
-            // TAP-TO-RECORD / TAP-TO-STOP VOICE NOTE FIX
             async function toggleVoiceRecording() {
                 let micBtn = document.getElementById('mic-btn');
                 let preview = document.getElementById('file-preview');
@@ -572,7 +577,7 @@ def generate_chat_html():
                                 selectedFileBase64 = e.target.result;
                                 selectedFileType = 'audio';
                                 preview.style.display = 'block';
-                                preview.innerText = ' Voice Note Recorded & Ready to Send';
+                                preview.innerText = '🎙️ Voice Note Recorded & Ready to Send';
                             };
                             reader.readAsDataURL(audioBlob);
                         };
@@ -581,9 +586,9 @@ def generate_chat_html():
                         isRecording = true;
                         micBtn.classList.add('recording');
                         preview.style.display = 'block';
-                        preview.innerText = ' Recording... Click mic again to stop.';
+                        preview.innerText = '🔴 Recording... Click mic again to stop.';
                     } catch (err) {
-                        alert("Microphone error: Make sure your browser allows microphone permissions (Note: Some browsers block mics on unsecured non-HTTPS connections).");
+                        alert("Microphone error: Make sure your browser allows microphone permissions.");
                     }
                 } else {
                     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
@@ -692,7 +697,7 @@ def generate_chat_html():
                     
                     let dmBadge = '';
                     if (m.recipient && m.recipient.toLowerCase() !== 'everyone') {
-                        dmBadge = `<div class="dm-badge"> DM to @${m.recipient}</div>`;
+                        dmBadge = `<div class="dm-badge">🔒 DM to @${m.recipient}</div>`;
                     }
 
                     let mediaHtml = '';
@@ -711,10 +716,10 @@ def generate_chat_html():
                     if (isMe) {
                         actionsHtml = `
                         <div class="msg-menu-container">
-                            <button class="dots-btn" onclick="toggleDropdown(${m.id}, event)">@</button>
+                            <button class="dots-btn" onclick="toggleDropdown(${m.id}, event)">⋮</button>
                             <div class="dropdown-menu" id="menu-${m.id}">
-                                <button onclick="editMessage(${m.id}, '${btoa(m.text || '')}')"> Edit</button>
-                                <button onclick="deleteMessage(${m.id})"> Delete</button>
+                                <button onclick="editMessage(${m.id}, '${btoa(m.text || '')}')" title="Edit">✏️</button>
+                                <button onclick="deleteMessage(${m.id})" title="Delete">🗑️</button>
                             </div>
                         </div>`;
                     }
@@ -739,7 +744,8 @@ def generate_chat_html():
 
             async function sendMessage(event) {
                 event.preventDefault();
-                let message = document.getElementById('message-input').value;
+                let messageInput = document.getElementById('message-input');
+                let message = messageInput.value.trim();
                 let mode = document.getElementById('chat-mode').value;
 
                 let recipient = "Everyone";
@@ -751,24 +757,43 @@ def generate_chat_html():
                     recipient = selectedDmPartner;
                 }
 
+                if (!message && !selectedFileBase64) return;
+
+                // --- INSTANT OPTIMISTIC DISPLAY ---
+                let tempMsg = {
+                    id: Date.now(),
+                    sender: myName,
+                    recipient: recipient,
+                    text: message,
+                    media_url: selectedFileBase64,
+                    media_type: selectedFileType,
+                    edited: 0
+                };
+                allMessages.push(tempMsg);
+                lastRenderedState = "";
+                renderChat();
+
+                messageInput.value = '';
+                let currentFileBase64 = selectedFileBase64;
+                let currentFileType = selectedFileType;
+
+                selectedFileBase64 = null;
+                selectedFileType = null;
+                document.getElementById('media-file').value = '';
+                document.getElementById('file-preview').style.display = 'none';
+
                 let formData = new URLSearchParams();
                 formData.append('username', myName);
                 formData.append('sender', myName);
                 formData.append('recipient', recipient);
                 formData.append('message', message);
 
-                if (selectedFileBase64 && selectedFileType) {
-                    formData.append('media_url', selectedFileBase64);
-                    formData.append('media_type', selectedFileType);
+                if (currentFileBase64 && currentFileType) {
+                    formData.append('media_url', currentFileBase64);
+                    formData.append('media_type', currentFileType);
                 }
 
                 await fetch('/send', { method: 'POST', body: formData });
-
-                document.getElementById('message-input').value = '';
-                document.getElementById('media-file').value = '';
-                selectedFileBase64 = null;
-                selectedFileType = null;
-                document.getElementById('file-preview').style.display = 'none';
                 fetchMessages();
             }
 
