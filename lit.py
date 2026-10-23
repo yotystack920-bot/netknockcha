@@ -211,11 +211,11 @@ def run_server():
                     conn.close()
                 http_response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nOK"
 
-            # 8. POST: Admin Clear Chat (PIN: Yes)
+            # 8. POST: Admin Clear Chat (PIN: yo200st!)
             elif "POST /admin/clear" in first_line:
                 parsed = parse_qs(body_bytes.decode('utf-8', errors='ignore'))
                 pin = parsed.get("pin", [""])[0]
-                if pin == "Yes":
+                if pin == "yo200st!":
                     conn = sqlite3.connect('chat.db')
                     cursor = conn.cursor()
                     cursor.execute("DELETE FROM messages")
@@ -370,7 +370,7 @@ def generate_chat_html():
             <div class="chat-header">
                 <h2>Netknock Pro</h2>
                 <div style="display: flex; gap: 8px; align-items: center;">
-                    <button class="admin-btn" onclick="openAdminModal()">🔑 Owner PIN</button>
+                    <button class="admin-btn" onclick="openAdminModal()"> Owner PIN</button>
                     <div id="greeting" style="display:none; font-size: 12px; color: #8696a0;">
                         <span id="current-user" style="color: #00a884; font-weight: bold;"></span> 
                         (<a href="#" onclick="logout()">Switch</a>)
@@ -391,8 +391,8 @@ def generate_chat_html():
             <div class="mode-selector" id="mode-bar" style="display:none;">
                 <span style="color:#8696a0;">Mode:</span>
                 <select id="chat-mode" onchange="toggleMode()">
-                    <option value="Everyone">🌍 Public Group</option>
-                    <option value="DM">🔒 Direct Message</option>
+                    <option value="Everyone"> Public Group</option>
+                    <option value="DM"> Direct Message</option>
                 </select>
             </div>
 
@@ -409,10 +409,10 @@ def generate_chat_html():
             <form class="chat-footer" id="chat-form" onsubmit="sendMessage(event)" style="display:none;">
                 <div class="input-row">
                     <label class="action-btn" title="Attach Any File (Max 200MB)">
-                        📁<input type="file" id="media-file" accept="*" onchange="previewFile()">
+                        File<input type="file" id="media-file" accept="*" onchange="previewFile()">
                     </label>
                     <button type="button" class="action-btn" id="mic-btn" title="Click to Record/Stop Voice Note" onclick="toggleVoiceRecording()">
-                        🎤
+                        Rec
                     </button>
                     <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off">
                     <button type="submit" class="send-btn">Send</button>
@@ -577,7 +577,7 @@ def generate_chat_html():
                                 selectedFileBase64 = e.target.result;
                                 selectedFileType = 'audio';
                                 preview.style.display = 'block';
-                                preview.innerText = '🎙️ Voice Note Recorded & Ready to Send';
+                                preview.innerText = ' Voice Note Recorded & Ready to Send Tap send to send file';
                             };
                             reader.readAsDataURL(audioBlob);
                         };
@@ -586,7 +586,7 @@ def generate_chat_html():
                         isRecording = true;
                         micBtn.classList.add('recording');
                         preview.style.display = 'block';
-                        preview.innerText = '🔴 Recording... Click mic again to stop.';
+                        preview.innerText = ' Recording... Click mic again to stop. Tap send to send';
                     } catch (err) {
                         alert("Microphone error: Make sure your browser allows microphone permissions.");
                     }
@@ -697,7 +697,7 @@ def generate_chat_html():
                     
                     let dmBadge = '';
                     if (m.recipient && m.recipient.toLowerCase() !== 'everyone') {
-                        dmBadge = `<div class="dm-badge">🔒 DM to @${m.recipient}</div>`;
+                        dmBadge = `<div class="dm-badge">DM to @${m.recipient}</div>`;
                     }
 
                     let mediaHtml = '';
@@ -716,10 +716,10 @@ def generate_chat_html():
                     if (isMe) {
                         actionsHtml = `
                         <div class="msg-menu-container">
-                            <button class="dots-btn" onclick="toggleDropdown(${m.id}, event)">⋮</button>
+                            <button class="dots-btn" onclick="toggleDropdown(${m.id}, event)">TAP</button>
                             <div class="dropdown-menu" id="menu-${m.id}">
-                                <button onclick="editMessage(${m.id}, '${btoa(m.text || '')}')" title="Edit">✏️</button>
-                                <button onclick="deleteMessage(${m.id})" title="Delete">🗑️</button>
+                                <button onclick="editMessage(${m.id}, '${btoa(m.text || '')}')" title="Edit">Edit</button>
+                                <button onclick="deleteMessage(${m.id})" title="Delete">Delete</button>
                             </div>
                         </div>`;
                     }
